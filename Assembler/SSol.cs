@@ -35,7 +35,7 @@ namespace Assembler
                     {
                         throw new MessageException("Exceeded memory size!");
                     }
-                    if ( state.mem.Count <= state.numMemory)
+                    if (false)
                     {
                         throw new MessageException($"error in reading address {state.numMemory}");
                     }
@@ -76,8 +76,7 @@ namespace Assembler
                 arg1 = ( state.mem[state.pc] >> 16 ) & 0x7;
                 arg2 = state.mem[state.pc] & 0x7; /* only for add, nand */
 
-                addressField = ConvertNum(state.mem[state.pc] & 0xFFFF); /* for beq,
-								    lw, sw */
+                addressField = ConvertNum(state.mem[state.pc] & 0xFFFF); /* for beq, lw, sw */
                 state.pc++;
                 switch (opcode)
                 {

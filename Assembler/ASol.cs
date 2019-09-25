@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Assembler
 {
@@ -16,29 +16,22 @@ namespace Assembler
             int address;
             string label, opcode, arg0, arg1, arg2;
             int numLabels = 0;
-            StringBuilder num = new StringBuilder();
+            byte[] num = null;
             int addressField;
-
             var labelArray = new List<Label>(Common.MAXNUMLABELS);
 
             inFileString = argv[0];
             outFileString = argv[1];
 
             StreamReader inFile = null;
-            FileStream outFile = null; 
-            SymmetricAlgorithm symm = new RijndaelManaged(); //creating an instance
-            ICryptoTransform transform = symm.CreateEncryptor(); //and calling the CreateEncryptor method which //creates a symmetric encryptor object.
-            CryptoStream cstream = null;
-            StreamWriter sw = null;
-            MemoryStream ms = null;
+            FileStream fs = null;
+            StreamWriter outFile = null;
 
             try
             {
                 inFile = new StreamReader(inFileString);
-                outFile = new FileStream(outFileString, FileMode.Create, FileAccess.Write);
-                cstream = new CryptoStream(outFile, transform, CryptoStreamMode.Write);
-                ms = new MemoryStream();
-                sw = new StreamWriter(ms);
+                //fs = new FileStream(outFileString, FileMode.Create, FileAccess.Write);
+                outFile = new StreamWriter(outFileString);
                 /* map symbols to addresses */
 
                 /* assume address start at 0 */
@@ -129,29 +122,27 @@ namespace Assembler
                 addresses) */
                 inFile.DiscardBufferedData();
                 inFile.BaseStream.Seek(0, SeekOrigin.Begin);
-                var offset = 0;
                 for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); address++)
                 {
-                    num.Clear();
                     if (!opcode.Equals(Common.Commands[Command.ADD]))
                     {
-                        num.Append( (int)Command.ADD + ";" + arg0 + ";" + arg1 + ";" + arg2);
+                        num = Encoding((int)Command.ADD, arg0, arg1, arg2);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.NAND]))
                     {
-                        num.Append((int)Command.NAND + ";" + arg0 + ";" + arg1 + ";" + arg2);
+                        num = Encoding((int)Command.NAND, arg0, arg1, arg2);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.JALR]))
                     {
-                        num.Append((int)Command.JALR + ";" + arg0 + ";" + arg1);
+                        num = Encoding((int)Command.JALR, arg0, arg1);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.HALT]))
                     {
-                        num.Append((int)Command.HALT);
+                        num = Encoding((int)Command.HALT);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.MUL]))
                     {
-                        num = num.Append((int)Command.MUL + ";" + arg0 + ";" + arg1 + ";" + arg2);
+                        num = Encoding((int)Command.MUL, arg0, arg1, arg2);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.LW]) || 
                         !opcode.Equals(Common.Commands[Command.SW]) || 
@@ -177,38 +168,32 @@ namespace Assembler
 
                         if (!opcode.Equals(Common.Commands[Command.BEQ]))
                         {
-                            num.Append((int)Command.BEQ + ";" + arg0 + ";" + arg1 + ";" + addressField);
+                            num = Encoding((int)Command.BEQ, arg0, arg1, addressField);
                         }
                         else
                         {
                             /* lw or sw */
                             if (!opcode.Equals(Common.Commands[Command.LW]))
                             {
-                                num.Append((int)Command.LW + ";" + arg0 + ";" + arg1 + ";" + addressField);
+                                num = Encoding((int)Command.LW, arg0, arg1, addressField);
                             }
                             else
                             {
-                                num.Append((int)Command.SW + ";" + arg0 + ";" + arg1 + ";" + addressField);
+                                num = Encoding((int)Command.SW, arg0, arg1, addressField);
                             }
                         }
                     }
-                    else if (!opcode.Equals(".fill"))
+                    else if (!opcode.Equals(Common.Commands[Command.FILL]))
                     {
-                        num.Append(!IsNumber(arg0) ? TranslateSymbol(labelArray, arg0) : int.Parse(arg0));
+                        num = Encoding(!IsNumber(arg0) ? TranslateSymbol(labelArray, arg0) : int.Parse(arg0));
                     }
-                    sw.WriteLine(num.ToString());
-                    cstream.Write(ms.ToArray(), offset, (int)ms.Length);
-                    offset += (int)ms.Length;
+                    outFile.WriteLine(System.Text.Encoding.UTF8.GetString(num));
                 }
-                cstream.FlushFinalBlock();
             }
             finally
             {
                 inFile?.Close();
                 outFile?.Close();
-                ms?.Close();
-                cstream?.Close();
-                symm?.Dispose();
             }
         }
 
@@ -301,6 +286,21 @@ namespace Assembler
             {
                 throw new MessageException("Bad character in addressField!");
             }
+        }
+
+        private byte[] Encoding(params object[] objects)
+        {
+            BinaryFormatter bin = new BinaryFormatter();
+            var str = string.Empty;
+            using (var ms = new MemoryStream())
+            {
+                foreach (var obj in objects)
+                {
+                    bin.Serialize(ms, obj);
+                }
+                str = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+            }
+            return Common.Encrypt(str);
         }
     }
 }
