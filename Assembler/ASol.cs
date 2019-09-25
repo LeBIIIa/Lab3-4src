@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Assembler
@@ -14,7 +16,7 @@ namespace Assembler
             int address;
             string label, opcode, arg0, arg1, arg2;
             int numLabels = 0;
-            int num = 0;
+            StringBuilder num = new StringBuilder();
             int addressField;
 
             var labelArray = new List<Label>(Common.MAXNUMLABELS);
@@ -23,11 +25,20 @@ namespace Assembler
             outFileString = argv[1];
 
             StreamReader inFile = null;
-            StreamWriter outFile = null;
+            FileStream outFile = null; 
+            SymmetricAlgorithm symm = new RijndaelManaged(); //creating an instance
+            ICryptoTransform transform = symm.CreateEncryptor(); //and calling the CreateEncryptor method which //creates a symmetric encryptor object.
+            CryptoStream cstream = null;
+            StreamWriter sw = null;
+            MemoryStream ms = null;
+
             try
             {
                 inFile = new StreamReader(inFileString);
-                outFile = new StreamWriter(outFileString);
+                outFile = new FileStream(outFileString, FileMode.Create, FileAccess.Write);
+                cstream = new CryptoStream(outFile, transform, CryptoStreamMode.Write);
+                ms = new MemoryStream();
+                sw = new StreamWriter(ms);
                 /* map symbols to addresses */
 
                 /* assume address start at 0 */
@@ -118,27 +129,29 @@ namespace Assembler
                 addresses) */
                 inFile.DiscardBufferedData();
                 inFile.BaseStream.Seek(0, SeekOrigin.Begin);
+                var offset = 0;
                 for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); address++)
                 {
+                    num.Clear();
                     if (!opcode.Equals(Common.Commands[Command.ADD]))
                     {
-                        num = ( (int)Command.ADD << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 ) | int.Parse(arg2);
+                        num.Append( (int)Command.ADD + ";" + arg0 + ";" + arg1 + ";" + arg2);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.NAND]))
                     {
-                        num = ( (int)Command.NAND << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 ) | int.Parse(arg2);
+                        num.Append((int)Command.NAND + ";" + arg0 + ";" + arg1 + ";" + arg2);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.JALR]))
                     {
-                        num = ( (int)Command.JALR << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 );
+                        num.Append((int)Command.JALR + ";" + arg0 + ";" + arg1);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.HALT]))
                     {
-                        num = (int)Command.HALT << 22;
+                        num.Append((int)Command.HALT);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.MUL]))
                     {
-                        num = ( (int)Command.MUL << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 ) | int.Parse(arg2);
+                        num = num.Append((int)Command.MUL + ";" + arg0 + ";" + arg1 + ";" + arg2);
                     }
                     else if (!opcode.Equals(Common.Commands[Command.LW]) || 
                         !opcode.Equals(Common.Commands[Command.SW]) || 
@@ -162,36 +175,40 @@ namespace Assembler
                             throw new MessageException($"Error: offset {addressField} out of range");
                         }
 
-                        /* truncate the offset field, in case it's negative */
-                        addressField &= 0xFFFF;
                         if (!opcode.Equals(Common.Commands[Command.BEQ]))
                         {
-                            num = ( (int)Command.BEQ << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 ) | addressField;
+                            num.Append((int)Command.BEQ + ";" + arg0 + ";" + arg1 + ";" + addressField);
                         }
                         else
                         {
                             /* lw or sw */
                             if (!opcode.Equals(Common.Commands[Command.LW]))
                             {
-                                num = ( (int)Command.LW << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 ) | addressField;
+                                num.Append((int)Command.LW + ";" + arg0 + ";" + arg1 + ";" + addressField);
                             }
                             else
                             {
-                                num = ( (int)Command.SW << 22 ) | ( int.Parse(arg0) << 19 ) | ( int.Parse(arg1) << 16 ) | addressField;
+                                num.Append((int)Command.SW + ";" + arg0 + ";" + arg1 + ";" + addressField);
                             }
                         }
                     }
                     else if (!opcode.Equals(".fill"))
                     {
-                        num = !IsNumber(arg0) ? TranslateSymbol(labelArray, arg0) : int.Parse(arg0);
+                        num.Append(!IsNumber(arg0) ? TranslateSymbol(labelArray, arg0) : int.Parse(arg0));
                     }
-                    outFile.WriteLine(num.ToString());
+                    sw.WriteLine(num.ToString());
+                    cstream.Write(ms.ToArray(), offset, (int)ms.Length);
+                    offset += (int)ms.Length;
                 }
+                cstream.FlushFinalBlock();
             }
             finally
             {
-                inFile.Close();
-                outFile.Close();
+                inFile?.Close();
+                outFile?.Close();
+                ms?.Close();
+                cstream?.Close();
+                symm?.Dispose();
             }
         }
 

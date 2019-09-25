@@ -26,18 +26,20 @@ namespace Assembler
         public const int NUMMEMORY = 65536;
         public const int NUMREGS = 8;
         internal const int startMemCommand = 256;
-        public static readonly Dictionary<Command, string> Commands;
-        static Common()
+        private static Dictionary<Command, string> _command;
+        public static Dictionary<Command, string> Commands { get { if (_command == null) { Init(); } return _command; } }
+        private static void Init()
         {
-            foreach(var c in (Command[])Enum.GetValues(typeof(Command)))
+            _command = new Dictionary<Command, string>();
+            foreach (var c in (Command[])Enum.GetValues(typeof(Command)))
             {
                 if ((int)c < startMemCommand)
                 {
-                    Commands.Add(c, c.ToString().ToLower());
+                    _command.Add(c, c.ToString().ToLower());
                 }
                 else
                 {
-                    Commands.Add(c, $".{c.ToString().ToLower()}");
+                    _command.Add(c, $".{c.ToString().ToLower()}");
                 }
             }
         }
