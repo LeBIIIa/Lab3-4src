@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29318.209
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab3-4src", "Lab3-4src\Lab3-4src.csproj", "{52765B42-950F-4FAF-9818-A2044E03710B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler", "Assembler\Assembler.csproj", "{8E2BAA77-2671-4CE5-A283-B69D96D1C337}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScintillaNET.Demo", "TextEditor\ScintillaNET.Demo.csproj", "{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{52765B42-950F-4FAF-9818-A2044E03710B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{52765B42-950F-4FAF-9818-A2044E03710B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{52765B42-950F-4FAF-9818-A2044E03710B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{52765B42-950F-4FAF-9818-A2044E03710B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

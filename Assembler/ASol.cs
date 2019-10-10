@@ -16,7 +16,7 @@ namespace Assembler
             int address;
             string label, opcode, arg0, arg1, arg2;
             int numLabels = 0;
-            byte[] num = null;
+            int num;
             int addressField;
             var labelArray = new List<Label>(Common.MAXNUMLABELS);
 
@@ -24,13 +24,11 @@ namespace Assembler
             outFileString = argv[1];
 
             StreamReader inFile = null;
-            FileStream fs = null;
             StreamWriter outFile = null;
 
             try
             {
                 inFile = new StreamReader(inFileString);
-                //fs = new FileStream(outFileString, FileMode.Create, FileAccess.Write);
                 outFile = new StreamWriter(outFileString);
                 /* map symbols to addresses */
 
@@ -39,46 +37,42 @@ namespace Assembler
                 {
 
                     /* check for illegal opcode */
-                    if (!opcode.Equals(Common.Commands[Command.ADD]) && !opcode.Equals(Common.Commands[Command.NAND]) &&
-                        !opcode.Equals(Common.Commands[Command.LW]) && !opcode.Equals(Common.Commands[Command.SW]) &&
-                        !opcode.Equals(Common.Commands[Command.BEQ]) && !opcode.Equals(Common.Commands[Command.JALR]) &&
-                        !opcode.Equals(Common.Commands[Command.HALT]) && !opcode.Equals(Common.Commands[Command.MUL]) &&
-                        !opcode.Equals(Common.Commands[Command.FILL]))
+                    if ( !Common.Commands.Any(c => opcode == c.Value))
                     {
                         throw new MessageException($"Unrecognized opcode {opcode} at address {address}");
                     }
 
                     /* check register fields */
-                    if (opcode.Equals(Common.Commands[Command.ADD]) || opcode.Equals(Common.Commands[Command.NAND]) ||
-                        opcode.Equals(Common.Commands[Command.LW]) || opcode.Equals(Common.Commands[Command.SW]) ||
-                        opcode.Equals(Common.Commands[Command.BEQ]) || opcode.Equals(Common.Commands[Command.JALR]) ||
-                        opcode.Equals(Common.Commands[Command.MUL]))
+                    if (opcode == (Common.Commands[Command.ADD]) || opcode == (Common.Commands[Command.NAND]) ||
+                        opcode == (Common.Commands[Command.LW]) || opcode == (Common.Commands[Command.SW]) ||
+                        opcode == (Common.Commands[Command.BEQ]) || opcode == (Common.Commands[Command.JALR]) ||
+                        opcode == (Common.Commands[Command.MUL]))
                     {
                         TestRegArg(arg0);
                         TestRegArg(arg1);
                     }
-                    if (opcode.Equals(Common.Commands[Command.ADD]) || opcode.Equals(Common.Commands[Command.NAND]) ||
-                        opcode.Equals(Common.Commands[Command.MUL]))
+                    if (opcode == (Common.Commands[Command.ADD]) || opcode == (Common.Commands[Command.NAND]) ||
+                        opcode == (Common.Commands[Command.MUL]))
                     {
                         TestRegArg(arg2);
                     }
 
                     /* check addressField */
-                    if (opcode.Equals(Common.Commands[Command.LW]) || opcode.Equals(Common.Commands[Command.SW]) ||
-                        opcode.Equals(Common.Commands[Command.BEQ]))
+                    if (opcode == (Common.Commands[Command.LW]) || opcode == (Common.Commands[Command.SW]) ||
+                        opcode == (Common.Commands[Command.BEQ]))
                     {
                         TestAddrArg(arg2);
                     }
-                    if (opcode.Equals(Common.Commands[Command.FILL]))
+                    if (opcode == (Common.Commands[Command.FILL]))
                     {
                         TestAddrArg(arg0);
                     }
 
                     /* check for enough arguments */
-                    if (( !opcode.Equals(Common.Commands[Command.HALT]) && !opcode.Equals(Common.Commands[Command.FILL]) &&
-                          !opcode.Equals(Common.Commands[Command.JALR]) && string.IsNullOrEmpty(arg2) ) ||
-                         ( opcode.Equals(Common.Commands[Command.JALR]) && string.IsNullOrEmpty(arg1) ) ||
-                         ( opcode.Equals(Common.Commands[Command.FILL]) && string.IsNullOrEmpty(arg0) ))
+                    if (( opcode != (Common.Commands[Command.HALT]) && opcode != (Common.Commands[Command.FILL]) &&
+                          opcode != (Common.Commands[Command.JALR]) && string.IsNullOrEmpty(arg2) ) ||
+                         ( opcode == (Common.Commands[Command.JALR]) && string.IsNullOrEmpty(arg1) ) ||
+                         ( opcode == (Common.Commands[Command.FILL]) && string.IsNullOrEmpty(arg0) ))
                     {
                         throw new MessageException($"Error at address {address}: not enough arguments");
                     }
@@ -104,9 +98,9 @@ namespace Assembler
                         }
 
                         /* look for duplicate label */
-                        if (labelArray.Exists(l => l.label.Equals(label)))
+                        if (labelArray.Exists(l => l.label == (label)))
                         {
-                            var index = labelArray.First(l => l.label.Equals(label)).Address;
+                            var index = labelArray.First(l => l.label == (label)).Address;
                             throw new MessageException($"Error: duplicate label {label} at address {index}");
                         }
                     }
@@ -124,35 +118,38 @@ namespace Assembler
                 inFile.BaseStream.Seek(0, SeekOrigin.Begin);
                 for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); address++)
                 {
-                    if (!opcode.Equals(Common.Commands[Command.ADD]))
+                    if (opcode == Common.Commands[Command.ADD])
                     {
-                        num = Encoding((int)Command.ADD, arg0, arg1, arg2);
+                        num = ((int)Command.ADD << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                            | int.Parse(arg2);
                     }
-                    else if (!opcode.Equals(Common.Commands[Command.NAND]))
+                    else if (opcode == (Common.Commands[Command.NAND]))
                     {
-                        num = Encoding((int)Command.NAND, arg0, arg1, arg2);
+                        num = ((int)Command.NAND << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                            | int.Parse(arg2);
                     }
-                    else if (!opcode.Equals(Common.Commands[Command.JALR]))
+                    else if (opcode == (Common.Commands[Command.JALR]))
                     {
-                        num = Encoding((int)Command.JALR, arg0, arg1);
+                        num = ((int)Command.JALR << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16);
                     }
-                    else if (!opcode.Equals(Common.Commands[Command.HALT]))
+                    else if (opcode == (Common.Commands[Command.HALT]))
                     {
-                        num = Encoding((int)Command.HALT);
+                        num = ((int)Command.HALT << 22);
                     }
-                    else if (!opcode.Equals(Common.Commands[Command.MUL]))
+                    else if (opcode == (Common.Commands[Command.MUL]))
                     {
-                        num = Encoding((int)Command.MUL, arg0, arg1, arg2);
+                        num = ((int)Command.MUL << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                            | int.Parse(arg2);
                     }
-                    else if (!opcode.Equals(Common.Commands[Command.LW]) || 
-                        !opcode.Equals(Common.Commands[Command.SW]) || 
-                        !opcode.Equals(Common.Commands[Command.BEQ]))
+                    else if (opcode == (Common.Commands[Command.LW]) || 
+                        opcode == (Common.Commands[Command.SW]) || 
+                        opcode == (Common.Commands[Command.BEQ]))
                     {
                         /* if arg2 is symbolic, then translate into an address */
                         if (!IsNumber(arg2))
                         {
                             addressField = TranslateSymbol(labelArray, arg2);
-                            if (!opcode.Equals(Common.Commands[Command.BEQ]))
+                            if (opcode == (Common.Commands[Command.BEQ]))
                             {
                                 addressField = addressField - address - 1;
                             }
@@ -166,28 +163,37 @@ namespace Assembler
                             throw new MessageException($"Error: offset {addressField} out of range");
                         }
 
-                        if (!opcode.Equals(Common.Commands[Command.BEQ]))
+                        if (opcode == (Common.Commands[Command.BEQ]))
                         {
-                            num = Encoding((int)Command.BEQ, arg0, arg1, addressField);
+                            num = ((int)Command.BEQ << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                            | addressField;
                         }
                         else
                         {
                             /* lw or sw */
-                            if (!opcode.Equals(Common.Commands[Command.LW]))
+                            if (opcode == (Common.Commands[Command.LW]))
                             {
-                                num = Encoding((int)Command.LW, arg0, arg1, addressField);
+                                num = ((int)Command.LW << 22) | (int.Parse(arg0) << 19) |
+                                                        (int.Parse(arg1) << 16) | addressField;
                             }
                             else
                             {
-                                num = Encoding((int)Command.SW, arg0, arg1, addressField);
+                                num = ((int)Command.SW << 22) | (int.Parse(arg0) << 19) |
+                                                        (int.Parse(arg1) << 16) | addressField;
                             }
                         }
                     }
-                    else if (!opcode.Equals(Common.Commands[Command.FILL]))
+                    else if (opcode == (Common.Commands[Command.FILL]))
                     {
-                        num = Encoding(!IsNumber(arg0) ? TranslateSymbol(labelArray, arg0) : int.Parse(arg0));
+                        if (int.TryParse(arg0, out num))
+                        {
+                            num = int.Parse(arg0);
+                        }
+                        else
+                        {
+                            num = TranslateSymbol(labelArray, arg0);
+                        }
                     }
-                    outFile.WriteLine(System.Text.Encoding.UTF8.GetString(num));
                 }
             }
             finally
@@ -243,7 +249,7 @@ namespace Assembler
         private static int TranslateSymbol( IEnumerable<Label> labelArray, string symbol )
         {
             /* search through address label table */
-            var label = labelArray.FirstOrDefault(l => l.label.Equals(symbol));
+            var label = labelArray.FirstOrDefault(l => l.label == (symbol));
 
             if (label.Equals(default(Label)))
             {

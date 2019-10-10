@@ -35,7 +35,7 @@ namespace Assembler
                     {
                         throw new MessageException("Exceeded memory size!");
                     }
-                    if (false)
+                    if (int.TryParse(line, out _))
                     {
                         throw new MessageException($"error in reading address {state.numMemory}");
                     }
@@ -50,7 +50,7 @@ namespace Assembler
             }
         }
 
-        private void Start( State state )
+        private void Start(State state)
         {
             var isHalt = false;
             int arg0, arg1, arg2, addressField;
@@ -136,7 +136,7 @@ namespace Assembler
             }
         }
 
-        private static void PrintState( State state)
+        private static void PrintState(State state)
         {
             Console.WriteLine("\n@@@\nstate:");
             Console.WriteLine($"\tpc {state.pc}");
@@ -153,7 +153,7 @@ namespace Assembler
             Console.WriteLine("end state");
         }
 
-        private static int ConvertNum( int num )
+        private static int ConvertNum(int num)
         {
             /* convert a 16-bit number into a 32-bit Sun integer */
             var test = num & ( 1 << 15 );
