@@ -18,7 +18,7 @@ namespace Assembler
             int numLabels = 0;
             int num;
             int addressField;
-            var labelArray = new List<Label>(Common.MAXNUMLABELS);
+            var labelArray = new List<Label>(CommonUtil.MAXNUMLABELS);
 
             inFileString = argv[0];
             outFileString = argv[1];
@@ -37,42 +37,42 @@ namespace Assembler
                 {
 
                     /* check for illegal opcode */
-                    if ( !Common.Commands.Any(c => opcode == c.Value))
+                    if ( !CommonUtil.Commands.Any(c => opcode == c.Value))
                     {
                         throw new MessageException($"Unrecognized opcode {opcode} at address {address}");
                     }
 
                     /* check register fields */
-                    if (opcode == (Common.Commands[Command.ADD]) || opcode == (Common.Commands[Command.NAND]) ||
-                        opcode == (Common.Commands[Command.LW]) || opcode == (Common.Commands[Command.SW]) ||
-                        opcode == (Common.Commands[Command.BEQ]) || opcode == (Common.Commands[Command.JALR]) ||
-                        opcode == (Common.Commands[Command.MUL]))
+                    if (opcode == (CommonUtil.Commands[Command.ADD]) || opcode == (CommonUtil.Commands[Command.NAND]) ||
+                        opcode == (CommonUtil.Commands[Command.LW]) || opcode == (CommonUtil.Commands[Command.SW]) ||
+                        opcode == (CommonUtil.Commands[Command.BEQ]) || opcode == (CommonUtil.Commands[Command.JALR]) ||
+                        opcode == (CommonUtil.Commands[Command.MUL]))
                     {
                         TestRegArg(arg0);
                         TestRegArg(arg1);
                     }
-                    if (opcode == (Common.Commands[Command.ADD]) || opcode == (Common.Commands[Command.NAND]) ||
-                        opcode == (Common.Commands[Command.MUL]))
+                    if (opcode == (CommonUtil.Commands[Command.ADD]) || opcode == (CommonUtil.Commands[Command.NAND]) ||
+                        opcode == (CommonUtil.Commands[Command.MUL]))
                     {
                         TestRegArg(arg2);
                     }
 
                     /* check addressField */
-                    if (opcode == (Common.Commands[Command.LW]) || opcode == (Common.Commands[Command.SW]) ||
-                        opcode == (Common.Commands[Command.BEQ]))
+                    if (opcode == (CommonUtil.Commands[Command.LW]) || opcode == (CommonUtil.Commands[Command.SW]) ||
+                        opcode == (CommonUtil.Commands[Command.BEQ]))
                     {
                         TestAddrArg(arg2);
                     }
-                    if (opcode == (Common.Commands[Command.FILL]))
+                    if (opcode == (CommonUtil.Commands[Command.FILL]))
                     {
                         TestAddrArg(arg0);
                     }
 
                     /* check for enough arguments */
-                    if (( opcode != (Common.Commands[Command.HALT]) && opcode != (Common.Commands[Command.FILL]) &&
-                          opcode != (Common.Commands[Command.JALR]) && string.IsNullOrEmpty(arg2) ) ||
-                         ( opcode == (Common.Commands[Command.JALR]) && string.IsNullOrEmpty(arg1) ) ||
-                         ( opcode == (Common.Commands[Command.FILL]) && string.IsNullOrEmpty(arg0) ))
+                    if (( opcode != (CommonUtil.Commands[Command.HALT]) && opcode != (CommonUtil.Commands[Command.FILL]) &&
+                          opcode != (CommonUtil.Commands[Command.JALR]) && string.IsNullOrEmpty(arg2) ) ||
+                         ( opcode == (CommonUtil.Commands[Command.JALR]) && string.IsNullOrEmpty(arg1) ) ||
+                         ( opcode == (CommonUtil.Commands[Command.FILL]) && string.IsNullOrEmpty(arg0) ))
                     {
                         throw new MessageException($"Error at address {address}: not enough arguments");
                     }
@@ -80,9 +80,9 @@ namespace Assembler
                     if ( !string.IsNullOrEmpty(label) )
                     {
                         /* check for labels that are too long */
-                        if (label.Length >= Common.MAXLABELLENGTH)
+                        if (label.Length >= CommonUtil.MAXLABELLENGTH)
                         {
-                            throw new MessageException($"Label {label} is too long!(max length: {Common.MAXLABELLENGTH})");
+                            throw new MessageException($"Label {label} is too long!(max length: {CommonUtil.MAXLABELLENGTH})");
                         }
 
                         /* make sure label starts with letter */
@@ -105,7 +105,7 @@ namespace Assembler
                         }
                     }
                     /* see if there are too many labels */
-                    if (numLabels >= Common.MAXNUMLABELS)
+                    if (numLabels >= CommonUtil.MAXNUMLABELS)
                     {
                         throw new MessageException($"Error: too many labels (label = {label})");
                     }
@@ -118,38 +118,38 @@ namespace Assembler
                 inFile.BaseStream.Seek(0, SeekOrigin.Begin);
                 for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); address++)
                 {
-                    if (opcode == Common.Commands[Command.ADD])
+                    if (opcode == CommonUtil.Commands[Command.ADD])
                     {
                         num = ((int)Command.ADD << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
                             | int.Parse(arg2);
                     }
-                    else if (opcode == (Common.Commands[Command.NAND]))
+                    else if (opcode == (CommonUtil.Commands[Command.NAND]))
                     {
                         num = ((int)Command.NAND << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
                             | int.Parse(arg2);
                     }
-                    else if (opcode == (Common.Commands[Command.JALR]))
+                    else if (opcode == (CommonUtil.Commands[Command.JALR]))
                     {
                         num = ((int)Command.JALR << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16);
                     }
-                    else if (opcode == (Common.Commands[Command.HALT]))
+                    else if (opcode == (CommonUtil.Commands[Command.HALT]))
                     {
                         num = ((int)Command.HALT << 22);
                     }
-                    else if (opcode == (Common.Commands[Command.MUL]))
+                    else if (opcode == (CommonUtil.Commands[Command.MUL]))
                     {
                         num = ((int)Command.MUL << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
                             | int.Parse(arg2);
                     }
-                    else if (opcode == (Common.Commands[Command.LW]) || 
-                        opcode == (Common.Commands[Command.SW]) || 
-                        opcode == (Common.Commands[Command.BEQ]))
+                    else if (opcode == (CommonUtil.Commands[Command.LW]) || 
+                        opcode == (CommonUtil.Commands[Command.SW]) || 
+                        opcode == (CommonUtil.Commands[Command.BEQ]))
                     {
                         /* if arg2 is symbolic, then translate into an address */
                         if (!IsNumber(arg2))
                         {
                             addressField = TranslateSymbol(labelArray, arg2);
-                            if (opcode == (Common.Commands[Command.BEQ]))
+                            if (opcode == (CommonUtil.Commands[Command.BEQ]))
                             {
                                 addressField = addressField - address - 1;
                             }
@@ -163,7 +163,7 @@ namespace Assembler
                             throw new MessageException($"Error: offset {addressField} out of range");
                         }
 
-                        if (opcode == (Common.Commands[Command.BEQ]))
+                        if (opcode == (CommonUtil.Commands[Command.BEQ]))
                         {
                             num = ((int)Command.BEQ << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
                             | addressField;
@@ -171,7 +171,7 @@ namespace Assembler
                         else
                         {
                             /* lw or sw */
-                            if (opcode == (Common.Commands[Command.LW]))
+                            if (opcode == (CommonUtil.Commands[Command.LW]))
                             {
                                 num = ((int)Command.LW << 22) | (int.Parse(arg0) << 19) |
                                                         (int.Parse(arg1) << 16) | addressField;
@@ -183,7 +183,7 @@ namespace Assembler
                             }
                         }
                     }
-                    else if (opcode == (Common.Commands[Command.FILL]))
+                    else if (opcode == (CommonUtil.Commands[Command.FILL]))
                     {
                         if (int.TryParse(arg0, out num))
                         {
@@ -227,7 +227,7 @@ namespace Assembler
             }
             var line = inFile.ReadLine();
             /* check for line too long */
-            if (line != null && line.Length == Common.MAXLINELENGTH - 1)
+            if (line != null && line.Length == CommonUtil.MAXLINELENGTH - 1)
             {
                 throw new MessageException("Error: line too long");
             }
@@ -277,7 +277,7 @@ namespace Assembler
 
             var num = int.Parse(arg);
 
-            if (num < 0 || num > Common.COUNTREGISTERS)
+            if (num < 0 || num > CommonUtil.COUNTREGISTERS)
             {
                 throw new MessageException($"Error: register out of range ({num})");
             }
@@ -294,19 +294,5 @@ namespace Assembler
             }
         }
 
-        private byte[] Encoding(params object[] objects)
-        {
-            BinaryFormatter bin = new BinaryFormatter();
-            var str = string.Empty;
-            using (var ms = new MemoryStream())
-            {
-                foreach (var obj in objects)
-                {
-                    bin.Serialize(ms, obj);
-                }
-                str = System.Text.Encoding.UTF8.GetString(ms.ToArray());
-            }
-            return Common.Encrypt(str);
-        }
     }
 }

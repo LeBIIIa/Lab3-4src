@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Assembler
 {
-    class SSol
+    public class SSol
     {
         public void Run( List<string> argv)
         {
@@ -19,8 +19,8 @@ namespace Assembler
             }
 
             /* initialize memories and registers */
-            state.mem = Enumerable.Repeat(0, Common.NUMMEMORY).ToList();
-            state.reg = Enumerable.Repeat(0, Common.NUMREGS).ToList();
+            state.mem = Enumerable.Repeat(0, CommonUtil.NUMMEMORY).ToList();
+            state.reg = Enumerable.Repeat(0, CommonUtil.NUMREGS).ToList();
             state.pc = 0;
 
             /* read machine-code file into instruction/data memory (starting at
@@ -31,7 +31,7 @@ namespace Assembler
                 for (state.numMemory = 0; !file.EndOfStream;state.numMemory++)
                 {
                     line = file.ReadLine();
-                    if (state.numMemory >= Common.NUMMEMORY)
+                    if (state.numMemory >= CommonUtil.NUMMEMORY)
                     {
                         throw new MessageException("Exceeded memory size!");
                     }
@@ -63,7 +63,7 @@ namespace Assembler
                 /* infinite loop, exits when it executes halt */
                 PrintState(state);
 
-                if (state.pc < 0 || state.pc >= Common.NUMMEMORY)
+                if (state.pc < 0 || state.pc >= CommonUtil.NUMMEMORY)
                 {
                     throw new MessageException($"PC went out of the memory range {state.pc}");
                 }
@@ -87,7 +87,7 @@ namespace Assembler
                         state.reg[arg2] = ~( state.reg[arg0] & state.reg[arg1] );
                         break;
                     case Command.LW:
-                        if (state.reg[arg0] + addressField < 0 || state.reg[arg0] + addressField >= Common.NUMMEMORY)
+                        if (state.reg[arg0] + addressField < 0 || state.reg[arg0] + addressField >= CommonUtil.NUMMEMORY)
                         {
                             throw new MessageException($"Address out of bounds({state.reg[arg0] + addressField})");
                         }
@@ -98,7 +98,7 @@ namespace Assembler
                         }
                         break;
                     case Command.SW:
-                        if (state.reg[arg0] + addressField < 0 || state.reg[arg0] + addressField >= Common.NUMMEMORY)
+                        if (state.reg[arg0] + addressField < 0 || state.reg[arg0] + addressField >= CommonUtil.NUMMEMORY)
                         {
                             throw new MessageException($"Address out of bounds({state.reg[arg0] + addressField})");
                         }
@@ -146,7 +146,7 @@ namespace Assembler
                 Console.WriteLine($"\t\tmem[ {i} ] {state.mem[i]}");
             }
             Console.WriteLine("\tregisters:");
-            for (var i = 0; i < Common.NUMREGS; i++)
+            for (var i = 0; i < CommonUtil.NUMREGS; i++)
             {
                 Console.WriteLine("\t\treg[ i ] state.reg[i]");
             }

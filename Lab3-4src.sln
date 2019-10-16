@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler", "Assembler\Assembler.csproj", "{8E2BAA77-2671-4CE5-A283-B69D96D1C337}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScintillaNET.Demo", "TextEditor\ScintillaNET.Demo.csproj", "{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8E2BAA77-2671-4CE5-A283-B69D96D1C337} = {8E2BAA77-2671-4CE5-A283-B69D96D1C337}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
