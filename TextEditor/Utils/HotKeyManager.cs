@@ -4,9 +4,9 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace ScintillaNET.Demo.Utils {
-	internal class HotKeyManager {
+	public static class HotKeyManager {
 
-		public static bool Enable = true;
+		public static bool Enable { get; set; } = true;
 
 		public static void AddHotKey(Form form, Action function, Keys key, bool ctrl = false, bool shift = false, bool alt = false) {
 			form.KeyPreview = true;

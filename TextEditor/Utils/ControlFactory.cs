@@ -12,14 +12,8 @@ namespace ScintillaNET.Demo.Utils
 	/// <summary>
 	/// Summary description for FormControlFactory.
 	/// </summary>
-	public class ControlFactory
+	public static class ControlFactory
 	{
-		public ControlFactory()
-		{
-			//
-			// TODO: Add constructor logic here
-			//
-		}
 
 		public static Control CreateControl(string ctrlName,string partialName)
 		{
@@ -80,7 +74,7 @@ namespace ScintillaNET.Demo.Utils
 			{	
 				if(propertyList.Contains(myProperty.Name))
 				{
-					Object obj = propertyList[myProperty.Name];
+					object obj = propertyList[myProperty.Name];
 					try
 					{
 						myProperty.SetValue(ctrl,obj);

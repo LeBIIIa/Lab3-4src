@@ -1,22 +1,17 @@
 ﻿using ScintillaNET;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace ScintillaNET.Demo.Utils {
-	internal class SearchManager {
+	public static class SearchManager {
 
-		public static ScintillaNET.Scintilla TextArea;
-		public static TextBox SearchBox;
+		public static Scintilla TextArea { get; set; }
+		public static TextBox SearchBox { get; set; }
 
-		public static string LastSearch = "";
+		public static string LastSearch { get; set; } = "";
 
-		public static int LastSearchIndex;
+		public static int LastSearchIndex { get; set; }
 
 		public static void Find(bool next, bool incremental) {
-			bool first = LastSearch != SearchBox.Text;
 
 			LastSearch = SearchBox.Text;
 			if (LastSearch.Length > 0) {

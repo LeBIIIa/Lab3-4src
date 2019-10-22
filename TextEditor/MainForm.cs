@@ -11,6 +11,7 @@ using Assembler;
 using ScintillaNET;
 using System.Text;
 using System.Text.RegularExpressions;
+using ScintillaNET_FindReplaceDialog;
 
 namespace ScintillaNET.Demo
 {
@@ -20,8 +21,8 @@ namespace ScintillaNET.Demo
         {
             InitializeComponent();
         }
-
-        ScintillaNET.Scintilla curTextArea = new Scintilla();
+        FindReplace myFindReplace;
+        Scintilla curTextArea = new Scintilla();
         private int newFiles = 1;
         FileInf curFileName;
         Dictionary<string, FileInf> files;
@@ -33,16 +34,18 @@ namespace ScintillaNET.Demo
 
             files = new Dictionary<string, FileInf>();
             // CREATE CONTROL
-            curTextArea = new Scintilla();
-            TextPanel.Controls.Add(curTextArea);
             InitTextArea(curTextArea);
             Logger.InitLogger();
+            myFindReplace = new FindReplace();
         }
 
         private void InitTextArea(Scintilla curTextArea)
         {
             // BASIC CONFIG
             curTextArea.Dock = DockStyle.Fill;
+
+            curTextArea.KeyDown += genericScintilla_KeyDown;
+            curTextArea.Enter += genericScintilla_Enter;
 
             // INITIAL VIEW CONFIG
             curTextArea.WrapMode = WrapMode.None;
@@ -77,7 +80,7 @@ namespace ScintillaNET.Demo
         {
 
             // register the hotkeys with the form
-            HotKeyManager.AddHotKey(this, OpenSearch, Keys.F, true);
+            //HotKeyManager.AddHotKey(this, OpenSearch, Keys.F, true);
             HotKeyManager.AddHotKey(this, OpenFindDialog, Keys.F, true, false, true);
             HotKeyManager.AddHotKey(this, OpenReplaceDialog, Keys.R, true);
             HotKeyManager.AddHotKey(this, OpenReplaceDialog, Keys.H, true);
@@ -86,7 +89,7 @@ namespace ScintillaNET.Demo
             HotKeyManager.AddHotKey(this, ZoomIn, Keys.Oemplus, true);
             HotKeyManager.AddHotKey(this, ZoomOut, Keys.OemMinus, true);
             HotKeyManager.AddHotKey(this, ZoomDefault, Keys.D0, true);
-            HotKeyManager.AddHotKey(this, CloseSearch, Keys.Escape);
+            //HotKeyManager.AddHotKey(this, CloseSearch, Keys.Escape);
 
             // remove conflicting hotkeys from scintilla
             curTextArea.ClearCmdKey(Keys.Control | Keys.F);
@@ -149,49 +152,6 @@ namespace ScintillaNET.Demo
 
         }
 
-        private void CloneTab(FileInf file)
-        {
-            // create new tab
-            TabPage tp = new TabPage();
-            tp.Text = file.filename;
-
-            // iterate through each control and clone it
-            foreach (Control c in tabControl.TabPages[0].Controls)
-            {
-                // clone control (this references the code project download ControlFactory.cs)
-                Control ctrl = ControlFactory.CloneCtrl(c);
-                GetAllControls(c, ctrl);
-                // now add it to the new tab
-                tp.Controls.Add(ctrl);
-                // set bounds to size and position
-                ctrl.SetBounds(c.Bounds.X, c.Bounds.Y, c.Bounds.Width, c.Bounds.Height);
-            }
-
-            // now add tab page
-            tabControl.TabPages.Add(tp);
-            tabControl.SelectedTab = tp;
-            file.page = tp;
-        }
-
-        private void GetAllControls(Control container, Control dest)
-        {
-            foreach (Control c in container.Controls)
-            {
-                Control ctrl;
-                if (!(c is Scintilla))
-                {
-                    ctrl = ControlFactory.CloneCtrl(c);
-                }
-                else
-                {
-                    curTextArea = new Scintilla();
-                    InitTextArea(curTextArea);
-                    ctrl = curTextArea;
-                }
-                dest.Controls.Add(ctrl);
-                GetAllControls(c, ctrl);
-            }
-        }
 
         private string GetNextFileName()
         {
@@ -380,15 +340,15 @@ namespace ScintillaNET.Demo
                 var t = new FileInf(file, file, true);
                 files.Add(file, t);
                 curFileName = t;
-                t.page = tabControl.SelectedTab;
-                tabControl.SelectedTab.Text = t.filename;
+                //t.page = tabControl.SelectedTab;
+                //tabControl.SelectedTab.Text = t.filename;
             }
             else
             {
                 string file = GetNextFileName();
                 var t = new FileInf(file, file, true);
                 files.Add(file, t);
-                CloneTab(t);
+                //CloneTab(t);
             }
             
         }
@@ -402,19 +362,19 @@ namespace ScintillaNET.Demo
                 {
                     files.Add(t.filename, t);
                     curFileName = t;
-                    tabControl.SelectedTab.Text = t.filename;
+                    //tabControl.SelectedTab.Text = t.filename;
                     LoadDataFromFile(openFileDialog.FileName);
                 }
                 else
                 {
                     if (files.Any(f => f.Value.fullPath == t.fullPath))
                     {
-                        tabControl.SelectedTab = files[t.fullPath].page;
+                        //tabControl.SelectedTab = files[t.fullPath].page;
                     }
                     else
                     {
                         files.Add(Path.GetFileName(openFileDialog.FileName), t);
-                        CloneTab(t);
+                        //CloneTab(t);
                         LoadDataFromFile(openFileDialog.FileName);
                     }
                 }
@@ -444,7 +404,7 @@ namespace ScintillaNET.Demo
             {
                 curFileName.fullPath = saveFileDialog.FileName;
                 curFileName.filename = Path.GetFileName(saveFileDialog.FileName);
-                tabControl.SelectedTab.Text = curFileName.filename;
+                //tabControl.SelectedTab.Text = curFileName.filename;
                 SaveDataToFile(saveFileDialog.FileName);
             }
         }
@@ -458,19 +418,11 @@ namespace ScintillaNET.Demo
             try
             {
                 project = new ASol();
-                project.Run();
+                //project.Run();
             }
             catch (MessageException me)
             {
-                if (me is MessageException)
-                {
-
-                }
-                else
-                {
-                    Logger.Log
-                }
-
+                
             }
             finally
             {
@@ -487,18 +439,10 @@ namespace ScintillaNET.Demo
             try
             {
                 project = new SSol();
-                project.Run();
+                //project.Run();
             }
             catch (MessageException me)
             {
-                if (me is MessageException)
-                {
-
-                }
-                else
-                {
-                    Logger.Log
-                }
             }
             finally
             {
@@ -508,7 +452,7 @@ namespace ScintillaNET.Demo
 
         private void findToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenSearch();
+            //OpenSearch();
         }
 
         private void findDialogToolStripMenuItem_Click(object sender, EventArgs e)
@@ -621,7 +565,6 @@ namespace ScintillaNET.Demo
             curTextArea.FoldAll(FoldAction.Expand);
         }
 
-
         #endregion
 
         #region Uppercase / Lowercase
@@ -699,82 +642,56 @@ namespace ScintillaNET.Demo
             curTextArea.Zoom = 0;
         }
 
-
-        #endregion
-
-        #region Quick Search Bar
-
-        bool SearchIsOpen = false;
-
-        private void OpenSearch()
-        {
-
-            SearchManager.SearchBox = TxtSearch;
-            SearchManager.TextArea = curTextArea;
-
-            if (!SearchIsOpen)
-            {
-                SearchIsOpen = true;
-                InvokeIfNeeded(delegate () {
-                    PanelSearch.Visible = true;
-                    TxtSearch.Text = SearchManager.LastSearch;
-                    TxtSearch.Focus();
-                    TxtSearch.SelectAll();
-                });
-            }
-            else
-            {
-                InvokeIfNeeded(delegate () {
-                    TxtSearch.Focus();
-                    TxtSearch.SelectAll();
-                });
-            }
-        }
-        private void CloseSearch()
-        {
-            if (SearchIsOpen)
-            {
-                SearchIsOpen = false;
-                InvokeIfNeeded(delegate () {
-                    PanelSearch.Visible = false;
-                    //CurBrowser.GetBrowser().StopFinding(true);
-                });
-            }
-        }
-
-        private void BtnClearSearch_Click(object sender, EventArgs e)
-        {
-            CloseSearch();
-        }
-
-        private void BtnPrevSearch_Click(object sender, EventArgs e)
-        {
-            SearchManager.Find(false, false);
-        }
-        private void BtnNextSearch_Click(object sender, EventArgs e)
-        {
-            SearchManager.Find(true, false);
-        }
-        private void TxtSearch_TextChanged(object sender, EventArgs e)
-        {
-            SearchManager.Find(true, true);
-        }
-
-        private void TxtSearch_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (HotKeyManager.IsHotkey(e, Keys.Enter))
-            {
-                SearchManager.Find(true, false);
-            }
-            if (HotKeyManager.IsHotkey(e, Keys.Enter, true) || HotKeyManager.IsHotkey(e, Keys.Enter, false, true))
-            {
-                SearchManager.Find(false, false);
-            }
-        }
-
         #endregion
 
         #region Find & Replace Dialog
+
+        private void genericScintilla_KeyDown( object sender, KeyEventArgs e )
+        {
+            FindReplace MyFindReplace = (FindReplace)sender;
+            if (e.Control && e.KeyCode == Keys.F)
+            {
+                MyFindReplace.ShowFind();
+                e.SuppressKeyPress = true;
+            }
+            else if (e.Shift && e.KeyCode == Keys.F3)
+            {
+                MyFindReplace.Window.FindPrevious();
+                e.SuppressKeyPress = true;
+            }
+            else if (e.KeyCode == Keys.F3)
+            {
+                MyFindReplace.Window.FindNext();
+                e.SuppressKeyPress = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.H)
+            {
+                MyFindReplace.ShowReplace();
+                e.SuppressKeyPress = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.I)
+            {
+                MyFindReplace.ShowIncrementalSearch();
+                e.SuppressKeyPress = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.G)
+            {
+                GoTo MyGoTo = new GoTo((Scintilla)sender);
+                MyGoTo.ShowGoToDialog();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void genericScintilla_Enter( object sender, EventArgs e )
+        {
+            myFindReplace.Scintilla = (Scintilla)sender;
+        }
+
+        private void MyFindReplace_KeyPressed( object sender, KeyEventArgs e )
+        {
+            genericScintilla_KeyDown(sender, e);
+        }
+
 
         private void OpenFindDialog()
         {
@@ -785,9 +702,8 @@ namespace ScintillaNET.Demo
 
 
         }
-
         #endregion
-
+        
         #region Utils
 
         public static Color IntToColor(int rgb)
@@ -797,18 +713,15 @@ namespace ScintillaNET.Demo
 
         public void InvokeIfNeeded(Action action)
         {
-            if (this.InvokeRequired)
+            if (InvokeRequired)
             {
-                this.BeginInvoke(action);
+                BeginInvoke(action);
             }
             else
             {
                 action.Invoke();
             }
         }
-
-
-
 
         #endregion
 
@@ -818,5 +731,6 @@ namespace ScintillaNET.Demo
             Text = curFileName?.fullPath ?? "" + ProgramName;
             curTextArea = ((TabControl)sender).SelectedTab.Controls[0].Controls.OfType<Scintilla>().Single();
         }
+
     }
 }
