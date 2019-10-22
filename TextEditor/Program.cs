@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace ScintillaNET.Demo {
+namespace ScintillaNET.Demo
+{
 	static class Program {
 		/// <summary>
 		/// The main entry point for the application.

@@ -52,6 +52,7 @@
     <Compile Include="CommonUtil.cs" />
     <Compile Include="MessageException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sol.cs" />
     <Compile Include="SSol.cs" />
   </ItemGroup>
   <ItemGroup>

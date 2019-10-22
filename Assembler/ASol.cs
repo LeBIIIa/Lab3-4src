@@ -8,9 +8,9 @@ using System.Text;
 
 namespace Assembler
 {
-    public class ASol
+    public class ASol : Sol
     {
-        public void Compile(List<string> argv)
+        public void Run(List<string> argv)
         {
             string inFileString, outFileString;
             int address;

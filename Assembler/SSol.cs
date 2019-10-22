@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Assembler
 {
-    public class SSol
+    public class SSol : Sol
     {
         public void Run( List<string> argv)
         {
