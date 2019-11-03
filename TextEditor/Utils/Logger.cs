@@ -14,12 +14,16 @@ namespace ScintillaNET.Demo.Utils
     {
         public static ILog Log { get; } = LogManager.GetLogger("LOGGER");
         public static MemoryAppender MemoryAppender { get; private set; }
+        public static TextBoxAppender TextBoxAppender { get; private set; }
+        
 
         public static void InitLogger()
         {
             XmlConfigurator.Configure(); 
             Hierarchy hierarchy = LogManager.GetRepository() as Hierarchy;
             MemoryAppender = hierarchy.Root.GetAppender("MemoryAppender") as MemoryAppender;
+            TextBoxAppender = hierarchy.Root.GetAppender("TextBoxAppender") as TextBoxAppender;
+
         }
     }
 }

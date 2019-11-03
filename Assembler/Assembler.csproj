@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ASol.cs" />
+    <Compile Include="ASSol.cs" />
     <Compile Include="CommonUtil.cs" />
     <Compile Include="MessageException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
