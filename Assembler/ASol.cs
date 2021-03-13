@@ -1,206 +1,177 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
-using System.Text;
 
 namespace Assembler
 {
-    public class ASol : Sol
+    public class ASol : ISol
     {
+        private Stopwatch Watch { get; set; } = new Stopwatch();
+        private string ResultFile { get; set; }
+
         public void Run(List<string> argv)
         {
-            string inFileString, outFileString;
+            string inFileString;
             int address;
             string label, opcode, arg0, arg1, arg2;
             int numLabels = 0;
-            int num;
+            int num = 0;
             int addressField;
-            var labelArray = new List<Label>(CommonUtil.MAXNUMLABELS);
+            List<Label> labelArray = new List<Label>(CommonUtil.MAXNUMLABELS);
 
             inFileString = argv[0];
-            outFileString = argv[1];
+            ResultFile = argv[1];
 
-            StreamReader inFile = null;
-            StreamWriter outFile = null;
-
-            try
+            Watch.Start();
+            using (StreamReader inFile = new StreamReader(inFileString))
             {
-                inFile = new StreamReader(inFileString);
-                outFile = new StreamWriter(outFileString);
-                /* map symbols to addresses */
-
-                /* assume address start at 0 */
-                for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); address++)
+                using (StreamWriter outFile = new StreamWriter(ResultFile))
                 {
+                    /* map symbols to addresses */
 
-                    /* check for illegal opcode */
-                    if ( !CommonUtil.Commands.Any(c => opcode == c.Value))
+                    /* assume address start at 0 */
+                    for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); ++address)
                     {
-                        throw new MessageException($"Unrecognized opcode {opcode} at address {address}");
-                    }
+                        /* check for illegal opcode */
+                        if (!CommonUtil.Commands.ContainsValue(opcode))
+                            throw new MessageException("Unrecognized opcode '" + opcode + "' at address " + (address + 1));
 
-                    /* check register fields */
-                    if (opcode == (CommonUtil.Commands[Command.ADD]) || opcode == (CommonUtil.Commands[Command.NAND]) ||
-                        opcode == (CommonUtil.Commands[Command.LW]) || opcode == (CommonUtil.Commands[Command.SW]) ||
-                        opcode == (CommonUtil.Commands[Command.BEQ]) || opcode == (CommonUtil.Commands[Command.JALR]) ||
-                        opcode == (CommonUtil.Commands[Command.MUL]))
-                    {
-                        TestRegArg(arg0);
-                        TestRegArg(arg1);
-                    }
-                    if (opcode == (CommonUtil.Commands[Command.ADD]) || opcode == (CommonUtil.Commands[Command.NAND]) ||
-                        opcode == (CommonUtil.Commands[Command.MUL]))
-                    {
-                        TestRegArg(arg2);
-                    }
-
-                    /* check addressField */
-                    if (opcode == (CommonUtil.Commands[Command.LW]) || opcode == (CommonUtil.Commands[Command.SW]) ||
-                        opcode == (CommonUtil.Commands[Command.BEQ]))
-                    {
-                        TestAddrArg(arg2);
-                    }
-                    if (opcode == (CommonUtil.Commands[Command.FILL]))
-                    {
-                        TestAddrArg(arg0);
-                    }
-
-                    /* check for enough arguments */
-                    if (( opcode != (CommonUtil.Commands[Command.HALT]) && opcode != (CommonUtil.Commands[Command.FILL]) &&
-                          opcode != (CommonUtil.Commands[Command.JALR]) && string.IsNullOrEmpty(arg2) ) ||
-                         ( opcode == (CommonUtil.Commands[Command.JALR]) && string.IsNullOrEmpty(arg1) ) ||
-                         ( opcode == (CommonUtil.Commands[Command.FILL]) && string.IsNullOrEmpty(arg0) ))
-                    {
-                        throw new MessageException($"Error at address {address}: not enough arguments");
-                    }
-
-                    if ( !string.IsNullOrEmpty(label) )
-                    {
-                        /* check for labels that are too long */
-                        if (label.Length >= CommonUtil.MAXLABELLENGTH)
+                        /* check register fields */
+                        if (opcode == CommonUtil.Commands[Command.ADD] || opcode == CommonUtil.Commands[Command.NAND] ||
+                            opcode == CommonUtil.Commands[Command.LW] || opcode == CommonUtil.Commands[Command.SW] ||
+                            opcode == CommonUtil.Commands[Command.BEQ] || opcode == CommonUtil.Commands[Command.JALR] ||
+                            opcode == CommonUtil.Commands[Command.MUL])
                         {
-                            throw new MessageException($"Label {label} is too long!(max length: {CommonUtil.MAXLABELLENGTH})");
+                            TestRegArg(arg0);
+                            TestRegArg(arg1);
                         }
+                        if (opcode == CommonUtil.Commands[Command.ADD] || opcode == CommonUtil.Commands[Command.NAND] ||
+                            opcode == CommonUtil.Commands[Command.MUL])
+                            TestRegArg(arg2);
 
-                        /* make sure label starts with letter */
-                        if (!Regex.IsMatch(label, "[a-zA-Z]"))
-                        {
-                            throw new MessageException($"Label {label} doesn't start with letter!");
-                        }
+                        /* check addressField */
+                        if (opcode == CommonUtil.Commands[Command.LW] || opcode == CommonUtil.Commands[Command.SW] ||
+                            opcode == CommonUtil.Commands[Command.BEQ])
+                            TestAddrArg(arg2);
 
-                        /* make sure label consists of only letters and numbers */
-                        if (!Regex.IsMatch(label, "[a-zA-Z0-9]"))
-                        {
-                            throw new MessageException($"Label {label} has character other that letters and numbers!");
-                        }
+                        if (opcode == CommonUtil.Commands[Command.FILL])
+                            TestAddrArg(arg0);
 
-                        /* look for duplicate label */
-                        if (labelArray.Exists(l => l.label == (label)))
-                        {
-                            var index = labelArray.First(l => l.label == (label)).Address;
-                            throw new MessageException($"Error: duplicate label {label} at address {index}");
-                        }
-                    }
-                    /* see if there are too many labels */
-                    if (numLabels >= CommonUtil.MAXNUMLABELS)
-                    {
-                        throw new MessageException($"Error: too many labels (label = {label})");
-                    }
-                    labelArray.Add(new Label { label = label, Address = address });
-                }
+                        /* check for enough arguments */
+                        if ((opcode != CommonUtil.Commands[Command.HALT] && opcode != CommonUtil.Commands[Command.FILL] &&
+                                opcode != CommonUtil.Commands[Command.JALR] && opcode != CommonUtil.Commands[Command.NOOP] && string.IsNullOrEmpty(arg2)) ||
+                                (opcode == CommonUtil.Commands[Command.JALR] && string.IsNullOrEmpty(arg1)) ||
+                                (opcode == CommonUtil.Commands[Command.FILL] && string.IsNullOrEmpty(arg0)))
+                            throw new MessageException("Error at address " + (address + 1) + ": not enough arguments");
 
-                /* now do second pass (print machine code, with symbols filled in as
-                addresses) */
-                inFile.DiscardBufferedData();
-                inFile.BaseStream.Seek(0, SeekOrigin.Begin);
-                for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); address++)
-                {
-                    if (opcode == CommonUtil.Commands[Command.ADD])
-                    {
-                        num = ((int)Command.ADD << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
-                            | int.Parse(arg2);
-                    }
-                    else if (opcode == (CommonUtil.Commands[Command.NAND]))
-                    {
-                        num = ((int)Command.NAND << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
-                            | int.Parse(arg2);
-                    }
-                    else if (opcode == (CommonUtil.Commands[Command.JALR]))
-                    {
-                        num = ((int)Command.JALR << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16);
-                    }
-                    else if (opcode == (CommonUtil.Commands[Command.HALT]))
-                    {
-                        num = ((int)Command.HALT << 22);
-                    }
-                    else if (opcode == (CommonUtil.Commands[Command.MUL]))
-                    {
-                        num = ((int)Command.MUL << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
-                            | int.Parse(arg2);
-                    }
-                    else if (opcode == (CommonUtil.Commands[Command.LW]) || 
-                        opcode == (CommonUtil.Commands[Command.SW]) || 
-                        opcode == (CommonUtil.Commands[Command.BEQ]))
-                    {
-                        /* if arg2 is symbolic, then translate into an address */
-                        if (!IsNumber(arg2))
+                        if (!string.IsNullOrEmpty(label))
                         {
-                            addressField = TranslateSymbol(labelArray, arg2);
-                            if (opcode == (CommonUtil.Commands[Command.BEQ]))
+                            /* check for labels that are too long */
+                            if (label.Length >= CommonUtil.MAXLABELLENGTH)
+                                throw new MessageException($"Label {label} is too long!(max length: {CommonUtil.MAXLABELLENGTH})");
+
+                            /* make sure label starts with letter */
+                            if (!Regex.IsMatch(label, "[a-zA-Z]"))
+                                throw new MessageException($"Label {label} doesn't start with letter!");
+
+                            /* make sure label consists of only letters and numbers */
+                            if (!Regex.IsMatch(label, "[a-zA-Z0-9]"))
+                                throw new MessageException($"Label {label} has character other that letters and numbers!");
+
+                            /* look for duplicate label */
+                            Label lbl = labelArray.FirstOrDefault(l => l.label == label);
+                            if (lbl != null)
                             {
-                                addressField = addressField - address - 1;
+                                int index = lbl.Address;
+                                throw new MessageException($"Error: duplicate label {label} at address {index}");
                             }
                         }
-                        else
-                        {
-                            addressField = int.Parse(arg2);
-                        }
-                        if (addressField < -32768 || addressField > 32767)
-                        {
-                            throw new MessageException($"Error: offset {addressField} out of range");
-                        }
+                        /* see if there are too many labels */
+                        if (numLabels >= CommonUtil.MAXNUMLABELS)
+                            throw new MessageException($"Error: too many labels (label = {label})");
 
-                        if (opcode == (CommonUtil.Commands[Command.BEQ]))
+                        labelArray.Add(new Label { label = label, Address = address });
+                    }
+
+                    /* now do second pass (print machine code, with symbols filled in as addresses) */
+                    inFile.DiscardBufferedData();
+                    inFile.BaseStream.Seek(0, SeekOrigin.Begin);
+                    for (address = 0; ReadAndParse(inFile, out label, out opcode, out arg0, out arg1, out arg2); ++address)
+                    {
+                        if (opcode == CommonUtil.Commands[Command.ADD])
+                            num = ((int)Command.ADD << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                                | int.Parse(arg2);
+
+                        else if (opcode == CommonUtil.Commands[Command.NAND])
+                            num = ((int)Command.NAND << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                                | int.Parse(arg2);
+
+                        else if (opcode == CommonUtil.Commands[Command.JALR])
+                            num = ((int)Command.JALR << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16);
+
+                        else if (opcode == CommonUtil.Commands[Command.HALT])
+                            num = (int)Command.HALT << 22;
+
+                        else if (opcode == CommonUtil.Commands[Command.NOOP])
+                            num = (int)Command.NOOP << 22;
+
+                        else if (opcode == CommonUtil.Commands[Command.MUL])
+                            num = ((int)Command.MUL << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                                | int.Parse(arg2);
+
+                        else if (opcode == CommonUtil.Commands[Command.LW] ||
+                            opcode == CommonUtil.Commands[Command.SW] ||
+                            opcode == CommonUtil.Commands[Command.BEQ])
                         {
-                            num = ((int)Command.BEQ << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
-                            | addressField;
-                        }
-                        else
-                        {
-                            /* lw or sw */
-                            if (opcode == (CommonUtil.Commands[Command.LW]))
+                            /* if arg2 is symbolic, then translate into an address */
+                            if (!IsNumber(arg2))
                             {
-                                num = ((int)Command.LW << 22) | (int.Parse(arg0) << 19) |
-                                                        (int.Parse(arg1) << 16) | addressField;
+                                addressField = TranslateSymbol(labelArray, arg2);
+                                if (opcode == CommonUtil.Commands[Command.BEQ])
+                                    addressField = addressField - address - 1;
                             }
                             else
+                                addressField = int.Parse(arg2);
+
+                            if (addressField < -32768 || addressField > 32767)
+                                throw new MessageException($"Error: offset {addressField} out of range");
+
+                            addressField &= 0xFFFF;
+
+                            if (opcode == CommonUtil.Commands[Command.BEQ])
+                                num = ((int)Command.BEQ << 22) | (int.Parse(arg0) << 19) | (int.Parse(arg1) << 16)
+                                | addressField;
+                            else
                             {
-                                num = ((int)Command.SW << 22) | (int.Parse(arg0) << 19) |
-                                                        (int.Parse(arg1) << 16) | addressField;
+                                /* lw or sw */
+                                if (opcode == CommonUtil.Commands[Command.LW])
+                                    num = ((int)Command.LW << 22) | (int.Parse(arg0) << 19) |
+                                                            (int.Parse(arg1) << 16) | addressField;
+                                else
+                                    num = ((int)Command.SW << 22) | (int.Parse(arg0) << 19) |
+                                                            (int.Parse(arg1) << 16) | addressField;
                             }
                         }
-                    }
-                    else if (opcode == (CommonUtil.Commands[Command.FILL]))
-                    {
-                        if (int.TryParse(arg0, out num))
+                        else if (opcode == (CommonUtil.Commands[Command.FILL]))
                         {
-                            num = int.Parse(arg0);
+                            if (int.TryParse(arg0, out num))
+                                num = int.Parse(arg0);
+                            else
+                                num = TranslateSymbol(labelArray, arg0);
                         }
-                        else
-                        {
-                            num = TranslateSymbol(labelArray, arg0);
-                        }
+                        outFile.WriteLine(num);
                     }
                 }
             }
-            finally
-            {
-                inFile?.Close();
-                outFile?.Close();
-            }
+            Watch.Stop();
+        }
+
+        public string Result()
+        {
+            return "Done! Compiled: " + Watch.Elapsed + ".\n Output file: " + ResultFile;
         }
 
         /*
@@ -225,16 +196,20 @@ namespace Assembler
                 /* reached end of file */
                 return false;
             }
-            var line = inFile.ReadLine();
+            string line = inFile.ReadLine();
             /* check for line too long */
             if (line != null && line.Length == CommonUtil.MAXLINELENGTH - 1)
             {
                 throw new MessageException("Error: line too long");
             }
 
-            var index = 0;
-            if (line == null) return false;
-            var split = line.Split(new[] {'\t', '\n', '\r', ' '}, StringSplitOptions.RemoveEmptyEntries);
+            int index = 0;
+            if (string.IsNullOrEmpty(line))
+            {
+                return false;
+            }
+
+            string[] split = line.Split(new[] {'\t', '\n', '\r', ' '}, StringSplitOptions.RemoveEmptyEntries);
             if (!line.StartsWith(" "))
             {
                 label = split[index++];
@@ -249,7 +224,7 @@ namespace Assembler
         private static int TranslateSymbol( IEnumerable<Label> labelArray, string symbol )
         {
             /* search through address label table */
-            var label = labelArray.FirstOrDefault(l => l.label == (symbol));
+            Label label = labelArray.FirstOrDefault(l => l.label == (symbol));
 
             if (label.Equals(default(Label)))
             {
@@ -269,13 +244,17 @@ namespace Assembler
          */
         private void TestRegArg( string arg )
         {
-            if (!IsNumber(arg)) return;
+            if (!IsNumber(arg))
+            {
+                return;
+            }
+
             if (!Regex.IsMatch(arg, "[0-9]"))
             {
                 throw new MessageException("Bad character in register argument!");
             }
 
-            var num = int.Parse(arg);
+            int num = int.Parse(arg);
 
             if (num < 0 || num > CommonUtil.COUNTREGISTERS)
             {

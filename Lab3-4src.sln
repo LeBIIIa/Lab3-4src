@@ -5,10 +5,7 @@ VisualStudioVersion = 16.0.29318.209
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler", "Assembler\Assembler.csproj", "{8E2BAA77-2671-4CE5-A283-B69D96D1C337}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScintillaNET.Demo", "TextEditor\ScintillaNET.Demo.csproj", "{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8E2BAA77-2671-4CE5-A283-B69D96D1C337} = {8E2BAA77-2671-4CE5-A283-B69D96D1C337}
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotepadSharp", "NotepadSharp\NotepadSharp.csproj", "{6781F90E-13B0-47AD-A2E5-6BE73102773B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,10 +17,10 @@ Global
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E2BAA77-2671-4CE5-A283-B69D96D1C337}.Release|Any CPU.Build.0 = Release|Any CPU
-		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6781F90E-13B0-47AD-A2E5-6BE73102773B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6781F90E-13B0-47AD-A2E5-6BE73102773B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6781F90E-13B0-47AD-A2E5-6BE73102773B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6781F90E-13B0-47AD-A2E5-6BE73102773B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
